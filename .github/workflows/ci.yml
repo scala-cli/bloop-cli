@@ -1,0 +1,123 @@
+name: CI
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  pull_request:
+
+jobs:
+  jvm-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: true
+      - uses: coursier/cache-action@v6.3
+      - uses: coursier/setup-action@v1.2.0
+        with:
+          jvm: "zulu:17"
+      - run: |
+          ./mill -i integration.test.jvm
+        if: runner.os != 'Windows'
+      - run: |
+          @call ./mill.bat -i integration.test.jvm
+        shell: cmd
+        if: runner.os == 'Windows'
+
+  native-tests:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: true
+      - uses: coursier/cache-action@v6.3
+      - uses: coursier/setup-action@v1.2.0
+        with:
+          jvm: "zulu:17"
+      - run: |
+          ./mill -i "cli.writeNativeImageScript" generate.sh "" && \
+          ./generate.sh && \
+          ./mill -i "cli.copyToArtifacts" artifacts/
+        if: runner.os != 'Windows'
+      - run: |
+          export USE_NATIVE_IMAGE_JAVA_PLATFORM_MODULE_SYSTEM=false
+          .github/scripts/generate-native-image-windows.sh
+        shell: bash
+        if: runner.os == 'Windows'
+      - uses: actions/upload-artifact@v3
+        with:
+          name: launchers
+          path: artifacts/
+          if-no-files-found: error
+          retention-days: 1
+      - run: ./mill -i "integration.test.native"
+        if: github.event_name == 'push'
+
+  upload-launchers:
+    needs: [format, jvm-tests, native-tests]
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          submodules: true
+      - uses: coursier/cache-action@v6.3
+      - uses: coursier/setup-action@v1.2.0
+        with:
+          jvm: "zulu:17"
+      - uses: actions/download-artifact@v3
+        with:
+          name: launchers
+          path: artifacts/
+      - run: ./mill -i ci.upload artifacts/
+        env:
+          UPLOAD_GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  format:
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        submodules: true
+    - uses: coursier/cache-action@v6.3
+    - uses: coursier/setup-action@v1.2.0
+      with:
+        jvm: "zulu:17"
+        apps: scalafmt:3.0.0
+    - run: scalafmt --check
+
+  publish:
+    needs: [format, jvm-tests, native-tests]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        submodules: true
+        ssh-key: ${{ secrets.SSH_PRIVATE_KEY_SCALA_CLI }}
+    - uses: coursier/cache-action@v6.3
+    - uses: coursier/setup-action@v1.2.0
+      with:
+        jvm: "zulu:17"
+    - name: GPG setup
+      run: .github/scripts/gpg-setup.sh
+      env:
+        PGP_SECRET: ${{ secrets.PUBLISH_SECRET_KEY }}
+    - run: ./mill -i io.kipp.mill.ci.release.ReleaseModule/publishAll
+      env:
+        PGP_SECRET: ${{ secrets.PUBLISH_SECRET_KEY }}
+        PGP_PASSWORD: ${{ secrets.PUBLISH_SECRET_KEY_PASSWORD }}
+        SONATYPE_USERNAME: ${{ secrets.PUBLISH_USER }}
+        SONATYPE_PASSWORD: ${{ secrets.PUBLISH_PASSWORD }}
