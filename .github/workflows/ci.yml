@@ -16,7 +16,7 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v6.3
-      - uses: coursier/setup-action@v1.2.0
+      - uses: coursier/setup-action@v1.2.1
         with:
           jvm: "temurin:17"
       - run: |
@@ -39,7 +39,7 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v6.3
-      - uses: coursier/setup-action@v1.2.0
+      - uses: coursier/setup-action@v1.2.1
         with:
           jvm: "temurin:17"
       - run: |
@@ -71,7 +71,7 @@ jobs:
           fetch-depth: 0
           submodules: true
       - uses: coursier/cache-action@v6.3
-      - uses: coursier/setup-action@v1.2.0
+      - uses: coursier/setup-action@v1.2.1
         with:
           jvm: "temurin:17"
       - uses: actions/download-artifact@v3
@@ -91,7 +91,7 @@ jobs:
         fetch-depth: 0
         submodules: true
     - uses: coursier/cache-action@v6.3
-    - uses: coursier/setup-action@v1.2.0
+    - uses: coursier/setup-action@v1.2.1
       with:
         jvm: "temurin:17"
         apps: scalafmt:3.0.0
@@ -108,7 +108,7 @@ jobs:
         submodules: true
         ssh-key: ${{ secrets.SSH_PRIVATE_KEY_SCALA_CLI }}
     - uses: coursier/cache-action@v6.3
-    - uses: coursier/setup-action@v1.2.0
+    - uses: coursier/setup-action@v1.2.1
       with:
         jvm: "temurin:17"
     - name: GPG setup
