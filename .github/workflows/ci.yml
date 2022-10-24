@@ -15,7 +15,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v6.3
+      - uses: coursier/cache-action@v6.4
       - uses: coursier/setup-action@v1.2.0
         with:
           jvm: "zulu:17"
@@ -38,7 +38,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v6.3
+      - uses: coursier/cache-action@v6.4
       - uses: coursier/setup-action@v1.2.0
         with:
           jvm: "zulu:17"
@@ -71,7 +71,7 @@ jobs:
         with:
           fetch-depth: 0
           submodules: true
-      - uses: coursier/cache-action@v6.3
+      - uses: coursier/cache-action@v6.4
       - uses: coursier/setup-action@v1.2.0
         with:
           jvm: "zulu:17"
@@ -91,7 +91,7 @@ jobs:
       with:
         fetch-depth: 0
         submodules: true
-    - uses: coursier/cache-action@v6.3
+    - uses: coursier/cache-action@v6.4
     - uses: coursier/setup-action@v1.2.0
       with:
         jvm: "zulu:17"
@@ -108,7 +108,7 @@ jobs:
         fetch-depth: 0
         submodules: true
         ssh-key: ${{ secrets.SSH_PRIVATE_KEY_SCALA_CLI }}
-    - uses: coursier/cache-action@v6.3
+    - uses: coursier/cache-action@v6.4
     - uses: coursier/setup-action@v1.2.0
       with:
         jvm: "zulu:17"
